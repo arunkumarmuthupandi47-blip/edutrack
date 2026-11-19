@@ -1,0 +1,6 @@
+{
+  "name": "Academic Focus",
+  "description": "A minimalist academic productivity workspace for tracking courses, assignments, timetables, grades, study focus sessions, and attendance.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
