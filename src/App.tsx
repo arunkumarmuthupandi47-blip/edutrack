@@ -5,6 +5,7 @@ import { AcademicProvider, useAcademic } from './context/AcademicContext';
 import type { NavTab } from './types/academic';
 import { NAV_ITEMS, Sidebar } from './components/Sidebar';
 import { TopBar } from './components/TopBar';
+import { FloatingRagChatbot } from './components/FloatingRagChatbot';
 import { OverviewView } from './views/OverviewView';
 import { CoursesView } from './views/CoursesView';
 import { AssignmentsView } from './views/AssignmentsView';
@@ -191,6 +192,7 @@ function WorkspaceShell() {
             </>
           )}
         </main>
+        <FloatingRagChatbot activeTab={activeTab} onNavigate={setActiveTab} />
       </div>
     </div>
   );
