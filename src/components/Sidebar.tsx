@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   Award,
   BookOpen,
+  Bot,
   CalendarDays,
   CheckSquare,
   Clock,
@@ -10,6 +11,7 @@ import {
   LogIn,
   LogOut,
   Menu,
+  MessageSquareText,
   MoreHorizontal,
   Settings,
   UserCheck,
@@ -33,6 +35,8 @@ export const NAV_ITEMS: Array<{
   { id: 'grades', label: 'Grades & GPA', shortLabel: 'Grades', icon: Award },
   { id: 'focus', label: 'Focus Timer', shortLabel: 'Focus', icon: Clock },
   { id: 'attendance', label: 'Attendance', shortLabel: 'Attend', icon: UserCheck },
+  { id: 'responses', label: 'Customer Responses', shortLabel: 'Responses', icon: MessageSquareText },
+  { id: 'assistant', label: 'AI RAG Chatbot', shortLabel: 'RAG AI', icon: Bot },
   { id: 'settings', label: 'Settings', shortLabel: 'Settings', icon: Settings },
 ];
 
@@ -50,6 +54,10 @@ export function Sidebar({
   const { user, signInWithGoogle, signOut } = useAuth();
   const { workspace } = useAcademic();
   const [moreSheetOpen, setMoreSheetOpen] = useState(false);
+
+  const openResponsesCount = (workspace.customerResponses || []).filter(
+    (r) => r.status === 'open' || r.status === 'in-progress'
+  ).length;
 
   const handleSelect = (tab: NavTab) => {
     onSelectTab(tab);
@@ -99,7 +107,18 @@ export function Sidebar({
                   className={`h-4 w-4 shrink-0 ${isActive ? 'text-[#4F46E5]' : 'text-[#64748B]'}`}
                   strokeWidth={1.6}
                 />
-                <span>{item.label}</span>
+                <span className="flex-1 text-left">{item.label}</span>
+                {item.id === 'responses' && openResponsesCount > 0 && (
+                  <span
+                    className={`inline-flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[11px] font-semibold tabular-nums ${
+                      isActive
+                        ? 'bg-[#4F46E5] text-white'
+                        : 'bg-[#EEF2FF] text-[#4F46E5]'
+                    }`}
+                  >
+                    {openResponsesCount}
+                  </span>
+                )}
               </button>
             );
           })}

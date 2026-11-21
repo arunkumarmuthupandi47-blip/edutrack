@@ -14,6 +14,93 @@ export type Database = {
   }
   public: {
     Tables: {
+      knowledge_documents: {
+        Row: {
+          category: string
+          content: string
+          course_code: string
+          created_at: string | null
+          id: number
+          source: string
+          tags: string[]
+          title: string
+          workspace_id: string
+        }
+        Insert: {
+          category?: string
+          content: string
+          course_code?: string
+          created_at?: string | null
+          id?: number
+          source?: string
+          tags?: string[]
+          title: string
+          workspace_id?: string
+        }
+        Update: {
+          category?: string
+          content?: string
+          course_code?: string
+          created_at?: string | null
+          id?: number
+          source?: string
+          tags?: string[]
+          title?: string
+          workspace_id?: string
+        }
+        Relationships: []
+      }
+      customer_responses: {
+        Row: {
+          category: string
+          created_at: string | null
+          customer_email: string
+          customer_name: string
+          id: number
+          message: string
+          priority: string
+          rating: number | null
+          responded_at: string | null
+          responded_by: string
+          response_text: string
+          status: string
+          subject: string
+          workspace_id: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string | null
+          customer_email: string
+          customer_name: string
+          id?: number
+          message: string
+          priority?: string
+          rating?: number | null
+          responded_at?: string | null
+          responded_by?: string
+          response_text?: string
+          status?: string
+          subject: string
+          workspace_id?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          customer_email?: string
+          customer_name?: string
+          id?: number
+          message?: string
+          priority?: string
+          rating?: number | null
+          responded_at?: string | null
+          responded_by?: string
+          response_text?: string
+          status?: string
+          subject?: string
+          workspace_id?: string
+        }
+        Relationships: []
+      }
       academic_requests: {
         Row: {
           course_id: number | null
@@ -309,7 +396,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      search_knowledge_documents: {
+        Args: {
+          query_text: string
+          match_limit?: number
+        }
+        Returns: {
+          id: number
+          title: string
+          category: string
+          course_code: string
+          source: string
+          tags: string[]
+          content: string
+          similarity: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

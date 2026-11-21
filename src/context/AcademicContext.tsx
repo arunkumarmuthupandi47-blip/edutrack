@@ -1,10 +1,17 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { createInitialWorkspaceData } from '../data/seedData';
+import { supabase } from '../lib/supabase';
 import type {
   AcademicRequest,
   Assignment,
   Course,
+  CustomerResponse,
+  CustomerResponseCategory,
+  CustomerResponsePriority,
+  CustomerResponseStatus,
   FocusSession,
+  KnowledgeDocument,
+  KnowledgeDocumentCategory,
   TimetableSession,
   UserProfile,
   WorkspaceData,
@@ -18,6 +25,7 @@ interface AcademicContextValue {
   loading: boolean;
   error: string | null;
   isAuthenticatedMode: boolean;
+  supabaseConnected: boolean;
   dismissError: () => void;
   updateProfile: (patch: Partial<UserProfile>) => Promise<void>;
   addCourse: (course: Omit<Course, 'id'>) => Promise<void>;
@@ -31,24 +39,56 @@ interface AcademicContextValue {
   logFocusSession: (session: Omit<FocusSession, 'id'>) => Promise<void>;
   addAcademicRequest: (req: Omit<AcademicRequest, 'id'>) => Promise<void>;
   updateRequestStatus: (id: number, status: AcademicRequest['status']) => Promise<void>;
+  addCustomerResponse: (
+    data: Pick<
+      CustomerResponse,
+      'customerName' | 'customerEmail' | 'category' | 'priority' | 'subject' | 'message'
+    >
+  ) => Promise<void>;
+  replyToCustomerResponse: (
+    id: number,
+    patch: {
+      responseText: string;
+      respondedBy: string;
+      status: CustomerResponseStatus;
+      rating?: number | null;
+    }
+  ) => Promise<void>;
+  deleteCustomerResponse: (id: number) => Promise<void>;
+  refreshCustomerResponses: () => Promise<void>;
+  addKnowledgeDocument: (
+    doc: Pick<KnowledgeDocument, 'title' | 'category' | 'courseCode' | 'source' | 'tags' | 'content'>
+  ) => Promise<void>;
+  deleteKnowledgeDocument: (id: number) => Promise<void>;
+  refreshKnowledgeDocuments: () => Promise<void>;
   resetLocalWorkspace: () => void;
 }
 
 const AcademicContext = createContext<AcademicContextValue | null>(null);
 
 function loadLocalWorkspace(): WorkspaceData {
+  const initial = createInitialWorkspaceData();
   try {
     const raw = window.localStorage.getItem(LOCAL_STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as WorkspaceData;
       if (parsed && Array.isArray(parsed.courses) && parsed.profile) {
-        return parsed;
+        return {
+          ...initial,
+          ...parsed,
+          customerResponses: Array.isArray(parsed.customerResponses)
+            ? parsed.customerResponses
+            : initial.customerResponses,
+          knowledgeDocuments: Array.isArray(parsed.knowledgeDocuments)
+            ? parsed.knowledgeDocuments
+            : initial.knowledgeDocuments,
+        };
       }
     }
   } catch {
     // Fall back to deterministic initial data if localStorage is unavailable
   }
-  return createInitialWorkspaceData();
+  return initial;
 }
 
 export function AcademicProvider({ children }: { children: React.ReactNode }) {
@@ -56,6 +96,7 @@ export function AcademicProvider({ children }: { children: React.ReactNode }) {
   const [workspace, setWorkspace] = useState<WorkspaceData>(() => loadLocalWorkspace());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [supabaseConnected, setSupabaseConnected] = useState(false);
 
   const isAuthenticatedMode = Boolean(user);
 
@@ -66,6 +107,91 @@ export function AcademicProvider({ children }: { children: React.ReactNode }) {
       // Ignore storage quota errors
     }
   }, []);
+
+  const refreshCustomerResponses = useCallback(async () => {
+    try {
+      const { data, error: sbError } = await supabase
+        .from('customer_responses')
+        .select('*')
+        .order('id', { ascending: false });
+
+      if (sbError) {
+        setSupabaseConnected(false);
+        return;
+      }
+
+      setSupabaseConnected(true);
+      if (data && data.length > 0) {
+        const mapped: CustomerResponse[] = data.map((row) => ({
+          id: row.id,
+          customerName: row.customer_name,
+          customerEmail: row.customer_email,
+          category: row.category as CustomerResponseCategory,
+          priority: row.priority as CustomerResponsePriority,
+          status: row.status as CustomerResponseStatus,
+          subject: row.subject,
+          message: row.message,
+          responseText: row.response_text,
+          respondedBy: row.responded_by,
+          respondedAt: row.responded_at,
+          rating: row.rating,
+          createdAt: row.created_at
+            ? row.created_at.replace('T', ' ').slice(0, 16)
+            : undefined,
+        }));
+
+        setWorkspace((prev) => {
+          const next = { ...prev, customerResponses: mapped };
+          persistLocal(next);
+          return next;
+        });
+      }
+    } catch {
+      setSupabaseConnected(false);
+    }
+  }, [persistLocal]);
+
+  const refreshKnowledgeDocuments = useCallback(async () => {
+    try {
+      const { data, error: sbError } = await supabase
+        .from('knowledge_documents')
+        .select('*')
+        .order('id', { ascending: true });
+
+      if (sbError) {
+        return;
+      }
+
+      setSupabaseConnected(true);
+      if (data && data.length > 0) {
+        const mapped: KnowledgeDocument[] = data.map((row) => ({
+          id: row.id,
+          title: row.title,
+          category: row.category as KnowledgeDocumentCategory,
+          courseCode: row.course_code,
+          source: row.source,
+          tags: row.tags || [],
+          content: row.content,
+          createdAt: row.created_at
+            ? row.created_at.replace('T', ' ').slice(0, 16)
+            : undefined,
+        }));
+
+        setWorkspace((prev) => {
+          const next = { ...prev, knowledgeDocuments: mapped };
+          persistLocal(next);
+          return next;
+        });
+      }
+    } catch {
+      // Ignore if offline
+    }
+  }, [persistLocal]);
+
+  useEffect(() => {
+    refreshCustomerResponses();
+    refreshKnowledgeDocuments();
+  }, [refreshCustomerResponses, refreshKnowledgeDocuments]);
 
   const authFetch = useCallback(
     async <T,>(url: string, options?: RequestInit): Promise<T> => {
@@ -437,11 +563,234 @@ export function AcademicProvider({ children }: { children: React.ReactNode }) {
     [isAuthenticatedMode, authFetch, updateLocal]
   );
 
+  const addCustomerResponse = useCallback(
+    async (
+      data: Pick<
+        CustomerResponse,
+        'customerName' | 'customerEmail' | 'category' | 'priority' | 'subject' | 'message'
+      >
+    ) => {
+      setError(null);
+      const nowStr = new Date().toISOString().replace('T', ' ').slice(0, 16);
+
+      try {
+        const { data: inserted, error: sbError } = await supabase
+          .from('customer_responses')
+          .insert({
+            workspace_id: 'default-workspace',
+            customer_name: data.customerName,
+            customer_email: data.customerEmail,
+            category: data.category,
+            priority: data.priority,
+            status: 'open',
+            subject: data.subject,
+            message: data.message,
+            response_text: '',
+            responded_by: '',
+          })
+          .select('*')
+          .single();
+
+        if (!sbError && inserted) {
+          setSupabaseConnected(true);
+          const createdItem: CustomerResponse = {
+            id: inserted.id,
+            customerName: inserted.customer_name,
+            customerEmail: inserted.customer_email,
+            category: inserted.category as CustomerResponseCategory,
+            priority: inserted.priority as CustomerResponsePriority,
+            status: inserted.status as CustomerResponseStatus,
+            subject: inserted.subject,
+            message: inserted.message,
+            responseText: inserted.response_text,
+            respondedBy: inserted.responded_by,
+            respondedAt: inserted.responded_at,
+            rating: inserted.rating,
+            createdAt: inserted.created_at
+              ? inserted.created_at.replace('T', ' ').slice(0, 16)
+              : nowStr,
+          };
+          updateLocal((prev) => ({
+            ...prev,
+            customerResponses: [createdItem, ...prev.customerResponses],
+          }));
+          return;
+        }
+      } catch {
+        // Fall through to local update if offline
+      }
+
+      const fallbackItem: CustomerResponse = {
+        id: Date.now(),
+        customerName: data.customerName,
+        customerEmail: data.customerEmail,
+        category: data.category,
+        priority: data.priority,
+        status: 'open',
+        subject: data.subject,
+        message: data.message,
+        responseText: '',
+        respondedBy: '',
+        respondedAt: null,
+        rating: null,
+        createdAt: nowStr,
+      };
+      updateLocal((prev) => ({
+        ...prev,
+        customerResponses: [fallbackItem, ...prev.customerResponses],
+      }));
+    },
+    [updateLocal]
+  );
+
+  const replyToCustomerResponse = useCallback(
+    async (
+      id: number,
+      patch: {
+        responseText: string;
+        respondedBy: string;
+        status: CustomerResponseStatus;
+        rating?: number | null;
+      }
+    ) => {
+      setError(null);
+      const respondedAt = new Date().toISOString().replace('T', ' ').slice(0, 16);
+
+      try {
+        const { error: sbError } = await supabase
+          .from('customer_responses')
+          .update({
+            response_text: patch.responseText,
+            responded_by: patch.respondedBy,
+            responded_at: respondedAt,
+            status: patch.status,
+            ...(patch.rating !== undefined ? { rating: patch.rating } : {}),
+          })
+          .eq('id', id);
+
+        if (!sbError) {
+          setSupabaseConnected(true);
+        }
+      } catch {
+        // Fall back to local persistence
+      }
+
+      updateLocal((prev) => ({
+        ...prev,
+        customerResponses: prev.customerResponses.map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                responseText: patch.responseText,
+                respondedBy: patch.respondedBy,
+                respondedAt,
+                status: patch.status,
+                rating: patch.rating !== undefined ? patch.rating : item.rating,
+              }
+            : item
+        ),
+      }));
+    },
+    [updateLocal]
+  );
+
+  const deleteCustomerResponse = useCallback(
+    async (id: number) => {
+      setError(null);
+      try {
+        await supabase.from('customer_responses').delete().eq('id', id);
+      } catch {
+        // Ignore if offline
+      }
+      updateLocal((prev) => ({
+        ...prev,
+        customerResponses: prev.customerResponses.filter((item) => item.id !== id),
+      }));
+    },
+    [updateLocal]
+  );
+
+  const addKnowledgeDocument = useCallback(
+    async (
+      doc: Pick<KnowledgeDocument, 'title' | 'category' | 'courseCode' | 'source' | 'tags' | 'content'>
+    ) => {
+      setError(null);
+      try {
+        const { data: inserted, error: sbError } = await supabase
+          .from('knowledge_documents')
+          .insert({
+            workspace_id: 'default-workspace',
+            title: doc.title,
+            category: doc.category,
+            course_code: doc.courseCode,
+            source: doc.source,
+            tags: doc.tags,
+            content: doc.content,
+          })
+          .select('*')
+          .single();
+
+        if (!sbError && inserted) {
+          setSupabaseConnected(true);
+          const createdDoc: KnowledgeDocument = {
+            id: inserted.id,
+            title: inserted.title,
+            category: inserted.category as KnowledgeDocumentCategory,
+            courseCode: inserted.course_code,
+            source: inserted.source,
+            tags: inserted.tags || [],
+            content: inserted.content,
+          };
+          updateLocal((prev) => ({
+            ...prev,
+            knowledgeDocuments: [createdDoc, ...(prev.knowledgeDocuments || [])],
+          }));
+          return;
+        }
+      } catch {
+        // Fallback to local update if offline
+      }
+
+      const fallbackDoc: KnowledgeDocument = {
+        id: Date.now(),
+        title: doc.title,
+        category: doc.category,
+        courseCode: doc.courseCode,
+        source: doc.source,
+        tags: doc.tags,
+        content: doc.content,
+      };
+      updateLocal((prev) => ({
+        ...prev,
+        knowledgeDocuments: [fallbackDoc, ...(prev.knowledgeDocuments || [])],
+      }));
+    },
+    [updateLocal]
+  );
+
+  const deleteKnowledgeDocument = useCallback(
+    async (id: number) => {
+      setError(null);
+      try {
+        await supabase.from('knowledge_documents').delete().eq('id', id);
+      } catch {
+        // Ignore if offline
+      }
+      updateLocal((prev) => ({
+        ...prev,
+        knowledgeDocuments: (prev.knowledgeDocuments || []).filter((d) => d.id !== id),
+      }));
+    },
+    [updateLocal]
+  );
+
   const resetLocalWorkspace = useCallback(() => {
     const fresh = createInitialWorkspaceData();
     setWorkspace(fresh);
     persistLocal(fresh);
-  }, [persistLocal]);
+    refreshCustomerResponses();
+    refreshKnowledgeDocuments();
+  }, [persistLocal, refreshCustomerResponses, refreshKnowledgeDocuments]);
 
   const dismissError = useCallback(() => setError(null), []);
 
@@ -452,6 +801,7 @@ export function AcademicProvider({ children }: { children: React.ReactNode }) {
         loading,
         error,
         isAuthenticatedMode,
+        supabaseConnected,
         dismissError,
         updateProfile,
         addCourse,
@@ -465,6 +815,13 @@ export function AcademicProvider({ children }: { children: React.ReactNode }) {
         logFocusSession,
         addAcademicRequest,
         updateRequestStatus,
+        addCustomerResponse,
+        replyToCustomerResponse,
+        deleteCustomerResponse,
+        refreshCustomerResponses,
+        addKnowledgeDocument,
+        deleteKnowledgeDocument,
+        refreshKnowledgeDocuments,
         resetLocalWorkspace,
       }}
     >

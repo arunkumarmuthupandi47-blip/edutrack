@@ -89,6 +89,34 @@ export const academicRequests = pgTable('academic_requests', {
   details: text('details').notNull(),
 });
 
+export const customerResponses = pgTable('customer_responses', {
+  id: serial('id').primaryKey(),
+  workspaceId: text('workspace_id').notNull().default('default-workspace'),
+  customerName: text('customer_name').notNull(),
+  customerEmail: text('customer_email').notNull(),
+  category: text('category').notNull().default('General Inquiry'),
+  priority: text('priority').notNull().default('medium'),
+  status: text('status').notNull().default('open'),
+  subject: text('subject').notNull(),
+  message: text('message').notNull(),
+  responseText: text('response_text').notNull().default(''),
+  respondedBy: text('responded_by').notNull().default(''),
+  respondedAt: text('responded_at'),
+  rating: integer('rating'),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+export const knowledgeDocuments = pgTable('knowledge_documents', {
+  id: serial('id').primaryKey(),
+  workspaceId: text('workspace_id').notNull().default('default-workspace'),
+  title: text('title').notNull(),
+  category: text('category').notNull().default('Course Syllabus'),
+  courseCode: text('course_code').notNull().default('GENERAL'),
+  source: text('source').notNull().default('University Knowledge Base'),
+  content: text('content').notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
 export const usersRelations = relations(users, ({ many }) => ({
   courses: many(courses),
   assignments: many(assignments),

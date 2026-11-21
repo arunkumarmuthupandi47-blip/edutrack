@@ -99,6 +99,13 @@ export function OverviewView({
           </button>
           <button
             type="button"
+            onClick={() => onNavigate('responses')}
+            className="inline-flex h-10 items-center gap-2 rounded-xl border border-[#E2E8F0] bg-white px-4 text-sm font-medium text-[#0F172A] transition-colors hover:bg-[#F8FAFC] whitespace-nowrap"
+          >
+            <span>Customer Responses</span>
+          </button>
+          <button
+            type="button"
             onClick={() => onNavigate('grades')}
             className="inline-flex h-10 items-center gap-2 rounded-xl border border-[#E2E8F0] bg-white px-4 text-sm font-medium text-[#0F172A] transition-colors hover:bg-[#F8FAFC] whitespace-nowrap"
           >

@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AlertCircle, X } from 'lucide-react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AcademicProvider, useAcademic } from './context/AcademicContext';
 import type { NavTab } from './types/academic';
-import { Sidebar } from './components/Sidebar';
+import { NAV_ITEMS, Sidebar } from './components/Sidebar';
 import { TopBar } from './components/TopBar';
 import { OverviewView } from './views/OverviewView';
 import { CoursesView } from './views/CoursesView';
@@ -12,19 +12,50 @@ import { TimetableView } from './views/TimetableView';
 import { GradesView } from './views/GradesView';
 import { FocusTimerView } from './views/FocusTimerView';
 import { AttendanceView } from './views/AttendanceView';
+import { CustomerResponseView } from './views/CustomerResponseView';
+import { RagChatbotView } from './views/RagChatbotView';
 import { SettingsView } from './views/SettingsView';
+
+const VALID_TABS = new Set<NavTab>(NAV_ITEMS.map((item) => item.id));
+
+function getInitialTabFromHash(): NavTab {
+  if (typeof window !== 'undefined' && window.location.hash) {
+    const raw = window.location.hash.replace(/^#/, '') as NavTab;
+    if (VALID_TABS.has(raw)) {
+      return raw;
+    }
+  }
+  return 'overview';
+}
 
 function WorkspaceShell() {
   const { authError, clearAuthError } = useAuth();
   const { loading, error, dismissError } = useAcademic();
 
-  const [activeTab, setActiveTab] = useState<NavTab>('overview');
+  const [activeTab, setActiveTabState] = useState<NavTab>(() => getInitialTabFromHash());
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
   const [courseModalOpen, setCourseModalOpen] = useState(false);
   const [assignmentModalOpen, setAssignmentModalOpen] = useState(false);
   const [timetableModalOpen, setTimetableModalOpen] = useState(false);
   const [requestModalOpen, setRequestModalOpen] = useState(false);
+  const [responseModalOpen, setResponseModalOpen] = useState(false);
+  const [docModalOpen, setDocModalOpen] = useState(false);
+
+  const setActiveTab = (tab: NavTab) => {
+    setActiveTabState(tab);
+    if (typeof window !== 'undefined') {
+      window.history.replaceState(null, '', `#${tab}`);
+    }
+  };
+
+  useEffect(() => {
+    const onHashChange = () => {
+      setActiveTabState(getInitialTabFromHash());
+    };
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
 
   const handlePrimaryAction = () => {
     if (activeTab === 'overview') {
@@ -46,6 +77,14 @@ function WorkspaceShell() {
     }
     if (activeTab === 'attendance') {
       setRequestModalOpen(true);
+      return;
+    }
+    if (activeTab === 'responses') {
+      setResponseModalOpen(true);
+      return;
+    }
+    if (activeTab === 'assistant') {
+      setDocModalOpen(true);
     }
   };
 
@@ -63,6 +102,7 @@ function WorkspaceShell() {
       <div className="flex min-h-screen flex-col lg:pl-64">
         <TopBar
           activeTab={activeTab}
+          onSelectTab={setActiveTab}
           onOpenMobileDrawer={() => setMobileDrawerOpen(true)}
           onPrimaryAction={handlePrimaryAction}
         />
@@ -133,6 +173,18 @@ function WorkspaceShell() {
                 <AttendanceView
                   externalModalOpen={requestModalOpen}
                   onCloseExternalModal={() => setRequestModalOpen(false)}
+                />
+              )}
+              {activeTab === 'responses' && (
+                <CustomerResponseView
+                  externalModalOpen={responseModalOpen}
+                  onCloseExternalModal={() => setResponseModalOpen(false)}
+                />
+              )}
+              {activeTab === 'assistant' && (
+                <RagChatbotView
+                  externalModalOpen={docModalOpen}
+                  onCloseExternalModal={() => setDocModalOpen(false)}
                 />
               )}
               {activeTab === 'settings' && <SettingsView />}

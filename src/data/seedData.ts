@@ -285,5 +285,156 @@ export function createInitialWorkspaceData(overrides?: {
         details: 'Memory profiling output was attached in appendix B.',
       },
     ],
+    customerResponses: [
+      {
+        id: 501,
+        customerName: 'Maya Lin',
+        customerEmail: 'maya.lin@university.edu',
+        category: 'Course Support',
+        priority: 'high',
+        status: 'open',
+        subject: 'Unable to access CS-301 Distributed Systems Lab 4 repository',
+        message:
+          "Hi support team, my GitHub Classroom invite link for CS-301 Lab 4 shows expired when I try to clone the starter template. Could you reissue the repository access link before Friday's deadline?",
+        responseText: '',
+        respondedBy: '',
+        respondedAt: null,
+        rating: null,
+        createdAt: '2026-11-20 09:15',
+      },
+      {
+        id: 502,
+        customerName: "Liam O'Connor",
+        customerEmail: 'liam.oconnor@university.edu',
+        category: 'Technical Issue',
+        priority: 'medium',
+        status: 'in-progress',
+        subject: 'Supabase timetable sync delay on mobile browser',
+        message:
+          'When I add a new tutorial session on my phone, it takes a refresh before appearing on my desktop timetable view. Is real-time sync enabled for timetable sessions?',
+        responseText:
+          'We are inspecting the timetable cache invalidation hook and rolling out an immediate state refresh after session creation.',
+        respondedBy: 'Elena Vance (Academic Support)',
+        respondedAt: '2026-11-19 14:20',
+        rating: 4,
+        createdAt: '2026-11-19 13:10',
+      },
+      {
+        id: 503,
+        customerName: 'Sophia Patel',
+        customerEmail: 'sophia.patel@university.edu',
+        category: 'Enrollment & Billing',
+        priority: 'high',
+        status: 'responded',
+        subject: 'Credit hour adjustment confirmation for COG-210',
+        message:
+          'I switched COG-210 from audit to 4.0 letter-graded credits this week. Can you confirm my GPA projection reflects the updated 4 credit hours?',
+        responseText:
+          'Confirmed! Your COG-210 enrollment record is now updated to 4.0 graded credits and your cumulative GPA projection includes the new weighting.',
+        respondedBy: 'Elena Vance (Academic Support)',
+        respondedAt: '2026-11-19 11:05',
+        rating: 5,
+        createdAt: '2026-11-19 09:40',
+      },
+      {
+        id: 504,
+        customerName: 'Noah Takahashi',
+        customerEmail: 'noah.takahashi@university.edu',
+        category: 'Feature Feedback',
+        priority: 'low',
+        status: 'resolved',
+        subject: 'Add keyboard shortcut for Focus Timer Pomodoro intervals',
+        message:
+          'It would be awesome if we could press Spacebar to pause/resume the 25-minute focus timer and quickly log the session to a course.',
+        responseText:
+          'Thank you for the suggestion! We added quick duration presets and course tagging to the Focus Timer view.',
+        respondedBy: 'Elena Vance (Academic Support)',
+        respondedAt: '2026-11-18 16:45',
+        rating: 5,
+        createdAt: '2026-11-18 14:00',
+      },
+    ],
+    knowledgeDocuments: [
+      {
+        id: 1,
+        title: 'CS 320 Algorithms & Complexity Syllabus & DP Rubric',
+        category: 'Course Syllabus',
+        courseCode: 'CS 320',
+        source: 'Department of Computer Science — Fall 2026',
+        tags: ['algorithms', 'dynamic programming', 'grading', 'midterm', 'cs320'],
+        content:
+          'Instructor: Prof. Marcus Holloway (4 Credits, Gates Hall 302, Mon/Wed 09:00–10:30, Fri Tutorial 10:00–11:30 at Gates Lab 105). Grading Breakdown: Problem Sets (40%), Midterm Exam (25%), Amortized Graph & Systems Final Benchmark (35%). Problem Set 4 focuses on interval scheduling, weighted DAG shortest paths, and bitmask Dynamic Programming recurrence proofs with formal time/space complexity bounds. Late Policy: Students receive one 48-hour grace token per semester; otherwise late submissions incur a 10% daily deduction. On the Graph Traversal Benchmark, criterion #3 evaluates peak heap memory (< 256 MB) documented in Appendix B.',
+      },
+      {
+        id: 2,
+        title: 'GitHub Classroom & Lab Repository Troubleshooting Guide',
+        category: 'Lab & Technical Guide',
+        courseCode: 'CS 320',
+        source: 'Academic IT & Engineering Support Docs',
+        tags: ['github', 'lab', 'repository', 'expired link', 'cs301', 'ssh'],
+        content:
+          'If a GitHub Classroom invitation link for CS 320 or CS 301 (such as Distributed Systems Lab 4) displays "Invite Expired" or "Repository Not Found", students or support staff can reissue repository access directly from the Academic Portal under Course Support -> Reissue GitHub Token, or reply with the "Access / Link Reissued" template in the Customer Response Hub. Ensure your university email is linked to your GitHub account and SSH Ed25519 keys are uploaded before cloning starter templates.',
+      },
+      {
+        id: 3,
+        title: 'COGS 210 Cognitive Neuroscience & fMRI Preprocessing Manual',
+        category: 'Course Syllabus',
+        courseCode: 'COGS 210',
+        source: 'Cognitive Systems Institute — Dr. Priya Nair',
+        tags: ['cogs210', 'fmri', 'neuroscience', 'hemodynamic', 'lab swap'],
+        content:
+          'Instructor: Dr. Priya Nair (3 Credits standard / 4 Credits letter-graded research track, Tue Seminar & Thu Lab 10:30–12:00 at Neuro Annex 204). Core Deliverables: fMRI Signal Preprocessing Critique (20% weight) and Working Memory Literature Synthesis (15% weight, requires 6 peer-reviewed citations). In the fMRI critique (Sections 2–4), students must compare canonical double-gamma Hemodynamic Response Functions (HRF) against finite impulse response (FIR) deconvolution and document motion-artifact scrubbing thresholds. Lab section swaps between Section A and Section B require TA confirmation.',
+      },
+      {
+        id: 4,
+        title: 'MATH 241 Linear Algebra & SVD Decomposition Lab Specification',
+        category: 'Lab & Technical Guide',
+        courseCode: 'MATH 241',
+        source: 'Department of Mathematics — Dr. Henrik Lindqvist',
+        tags: ['math241', 'svd', 'eigenvalue', 'linear algebra', 'jupyter'],
+        content:
+          'Instructor: Dr. Henrik Lindqvist (4 Credits, Mon Lecture 13:00–14:30 at Euler Center 114, Wed Lab 11:00–12:30 at Euler Lab 08). The SVD & Eigenvalue Decomposition Lab (12% weight) requires submitting an executable Jupyter Notebook (.ipynb) alongside a written Frobenius-norm truncation error analysis for low-rank matrix approximations (k = 5, 15, 50). Students experiencing overlapping midterm conflicts with CS 320 may request a 48-hour extension via the Attendance & Approvals tab.',
+      },
+      {
+        id: 5,
+        title: 'HIST 185 History of Scientific Thought Seminar & Archival Guide',
+        category: 'Course Syllabus',
+        courseCode: 'HIST 185',
+        source: 'Department of History — Prof. Clara Beaumont',
+        tags: ['hist185', 'kepler', 'optics', 'essay', 'citations'],
+        content:
+          'Instructor: Prof. Clara Beaumont (3 Credits, Tue/Thu Seminar 14:30–16:00 at Humanities 118). The Primary Source Essay on Johannes Kepler & 17th-Century Optics carries 25% course weight. Submissions must use Chicago Manual of Style (17th edition) footnote citations referencing translated primary Latin/German manuscripts and analyze geometric camera obscura ray diagrams.',
+      },
+      {
+        id: 6,
+        title: 'University Attendance Thresholds & Academic Request Policy',
+        category: 'Academic Policy',
+        courseCode: 'GENERAL',
+        source: 'Office of the University Registrar',
+        tags: ['attendance', 'extension', 'policy', '85%', 'approvals'],
+        content:
+          'All enrolled students must maintain a minimum 85% attendance rate across lectures and mandatory laboratory sessions. Status thresholds: 85%–100% is "On Track", 75%–84% triggers a "Threshold Warning", and below 75% is classified as "At Risk". Formal requests—including Assignment Extensions, Lab Section Swaps, Rubric Grade Reviews, and Medical Attendance Excuses—must be logged in the Attendance & Approvals portal with supporting dates and section numbers. Standard review SLA is 24 hours.',
+      },
+      {
+        id: 7,
+        title: 'GPA Evaluation Scale & Credit Hour Weighting Handbook',
+        category: 'Enrollment & GPA',
+        courseCode: 'GENERAL',
+        source: 'Academic Advising & Enrollment Services',
+        tags: ['gpa', 'grades', 'credits', 'target gpa', 'scale'],
+        content:
+          'Cumulative GPA is calculated as a credit-weighted average across all active courses on a 4.00 scale: A (93%–100% = 4.0), A- (90%–92.9% = 3.7), B+ (87%–89.9% = 3.3), B (83%–86.9% = 3.0), B- (80%–82.9% = 2.7), C+ (77%–79.9% = 2.3), C (73%–76.9% = 2.0), C- (70%–72.9% = 1.7), D (60%–69.9% = 1.0), F (<60% = 0.0). Switching a course from audit to 4.0 graded credit hours immediately updates the denominator and weighted grade points in the Grades & GPA Simulator.',
+      },
+      {
+        id: 8,
+        title: 'Academic Focus Platform, Pomodoro Timer & Supabase Sync FAQ',
+        category: 'Support FAQ',
+        courseCode: 'GENERAL',
+        source: 'EduTrack Platform Documentation',
+        tags: ['focus timer', 'pomodoro', 'supabase', 'rag', 'customer responses'],
+        content:
+          'The Academic Focus workspace recommends a default daily focus goal of 180 minutes split into 25-minute Pomodoro sprints or 50-minute deep-work blocks tagged to specific courses. All Customer Inquiries, Responses, and Knowledge Base RAG documents are persisted in real time to Supabase PostgreSQL with Row Level Security (RLS). When timetable or response changes are made on mobile or desktop, clicking Sync refreshes the live Supabase state immediately.',
+      },
+    ],
   };
 }

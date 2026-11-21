@@ -210,6 +210,14 @@ export async function getWorkspaceData(
         submittedDate: r.submittedDate,
         details: r.details,
       })),
+      customerResponses: createInitialWorkspaceData({
+        email: userRow.email,
+        name: userRow.name,
+      }).customerResponses,
+      knowledgeDocuments: createInitialWorkspaceData({
+        email: userRow.email,
+        name: userRow.name,
+      }).knowledgeDocuments,
     };
   } catch (error) {
     console.error('Database query failed in getWorkspaceData:', error);

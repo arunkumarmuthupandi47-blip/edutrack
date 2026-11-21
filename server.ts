@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import path from 'path';
+import { GoogleGenAI } from '@google/genai';
 import { requireAuth, type AuthRequest } from './src/middleware/auth.ts';
 import { checkDatabaseConnection, isDatabaseConfigured } from './src/db/index.ts';
 import { runMigrations } from './src/db/migrate.ts';
@@ -28,7 +29,48 @@ app.use(express.json());
 
 app.get('/api/health', async (_req, res) => {
   const database = await checkDatabaseConnection();
-  res.json({ ok: true, database });
+  const geminiConfigured = Boolean(
+    process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'MY_GEMINI_API_KEY'
+  );
+  res.json({ ok: true, database, geminiConfigured });
+});
+
+app.post('/api/rag/chat', async (req, res) => {
+  try {
+    const apiKey =
+      (typeof req.body?.apiKey === 'string' && req.body.apiKey.trim()) ||
+      (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'MY_GEMINI_API_KEY'
+        ? process.env.GEMINI_API_KEY.trim()
+        : '');
+
+    if (!apiKey) {
+      return res.status(400).json({
+        error: 'GEMINI_API_KEY is not configured on the server.',
+      });
+    }
+
+    const prompt = typeof req.body?.prompt === 'string' ? req.body.prompt : req.body?.query;
+    if (!prompt) {
+      return res.status(400).json({ error: 'Missing RAG prompt or query.' });
+    }
+
+    const ai = new GoogleGenAI({ apiKey });
+    const interaction = await ai.interactions.create({
+      model: 'gemini-4-hydrogen',
+      input: prompt,
+      system_instruction:
+        'You are the Academic Focus AI Assistant powered by Google Gemini 4 Hydrogen and Supabase RAG. Answer questions concisely and accurately using the Retrieved Supabase Knowledge Base Documents and Live Workspace State. Cite the retrieved document title or course code in brackets (e.g., [CS 320 Syllabus]) whenever you use information from a retrieved document.',
+    });
+
+    res.json({
+      answer: interaction.output_text || '',
+      model: 'gemini-4-hydrogen',
+      interactionId: interaction.id,
+    });
+  } catch (error: any) {
+    console.error('POST /api/rag/chat failed:', error);
+    res.status(500).json({ error: error?.message || 'Gemini RAG generation failed.' });
+  }
 });
 
 async function resolveUser(req: AuthRequest) {
